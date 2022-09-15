@@ -593,21 +593,29 @@ const init = async () => {
                     event.returnValues['0'] ===
                     '0x0000000000000000000000000000000000000000'
                 ) {
-                    getNFTData(contract, event.returnValues.tokenId).then(
-                        ({ imageURI, owner, traitValue }) => {
-                            if (groups.length > 0) {
-                                for (let group in groups) {
-                                    sendResponse.sendPhoto(
-                                        TELEGRAM_API,
-                                        group,
-                                        imageURI,
-                                        `🧀*RatBot NFT Minted🧀*\n\n*Owner:* https://bscscan.com/address/${owner}\n\n*ID:*${event.returnValues.tokenId}\n${traitValue}`,
-                                        messageId
-                                    );
+                    (async () => {
+                        const remaining = await contract.methods
+                            .lastSupply()
+                            .call();
+                        const totalSupply = await contract.methods
+                            .totalSupply()
+                            .call();
+                        getNFTData(contract, event.returnValues.tokenId).then(
+                            ({ imageURI, owner, traitValue }) => {
+                                if (groups.length > 0) {
+                                    for (let group in groups) {
+                                        sendResponse.sendPhoto(
+                                            TELEGRAM_API,
+                                            group,
+                                            imageURI,
+                                            `🧀*RatBot NFT Minted🧀*\n\n*${remaining}/${totalSupply} Minted*\n\n*Owner:* https://bscscan.com/address/${owner}\n\n*ID:*${event.returnValues.tokenId}\n${traitValue}`,
+                                            messageId
+                                        );
+                                    }
                                 }
                             }
-                        }
-                    );
+                        );
+                    })();
                 }
             })
             .on('error', (err) => {
@@ -667,8 +675,8 @@ app.post(URI, (req, res) => {
                                 '*Fetching data, please be patient!*',
                                 messageId
                             );
-                            getNFTData(contract, nftID)
-                                .then(({ imageURI, owner, traitValue }) => {
+                            getNFTData(contract, nftID).then(
+                                ({ imageURI, owner, traitValue }) => {
                                     console.log(imageURI);
                                     sendResponse.sendPhoto(
                                         TELEGRAM_API,
@@ -681,8 +689,8 @@ app.post(URI, (req, res) => {
                                         ],
                                         messageId
                                     );
-                                })
-                               
+                                }
+                            );
                         } catch (err) {
                             console.log(err);
                             sendResponse.sendMessage(
