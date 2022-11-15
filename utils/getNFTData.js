@@ -15,9 +15,10 @@ const getNFTData = async (contract, nftID) => {
             traitValue += `*${jsonNft.attributes[traits].trait_type}:* \t${jsonNft.attributes[traits].value}\n`;
         }
         const owner = await contract.methods.minters(nftID).call();
-
+        console.log(imageURI ? imageURI : 'does not exist');
         return { imageURI, owner, traitValue };
-    } catch {
+    } catch(err) {
+        console.log(err)
         return false;
     }
 };
